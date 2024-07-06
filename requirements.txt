@@ -1,0 +1,10 @@
+pandas
+yfinance
+numpy
+matplotlib
+git+https://github.com/pydata/pandas-datareader.git
+scikit-learn
+kneed
+plotly
+statsmodels
+scikit-learn
