@@ -76,7 +76,16 @@
             </div>
 
             <div class="container">
-                <div>{{ results | safe }}</div>
+                {% for result in results %}
+                <div class="result">
+                    {% for key, value in result.items() %}
+                    <p><strong>{{ key }}:</strong> {{ value }}</p>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                <div>{{ plot_priceseries | safe }}</div>
+                <div>{{ plot_spread | safe }}</div>
+                <div>{{ plot_z_score | safe }}</div>
             </div>
         </div>
 

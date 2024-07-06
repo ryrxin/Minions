@@ -4,6 +4,7 @@ from statsmodels.tsa.stattools import coint
 from itertools import combinations 
 import matplotlib.pyplot as plt
 from math import ceil
+import plotly.express as px
 
 def calculate_spread(df, stock1, stock2):
     return df[stock1] - df[stock2]
@@ -81,16 +82,17 @@ def analyze_pairs(df, stock1, stock2):
 
     return results_html, results_df, spread
 
-def analyze_and_plot_pairs(df, stock1, stock2):
+# Function to analyze and plot a single pair using Plotly Express
+def analyze_and_plot_single_pair(df, stock1, stock2):
     results = []
 
-    # Calculate spread for the specified pair
+    # Calculate spread
     spread = calculate_spread(df, stock1, stock2)
     spread_mean = spread.mean()
     spread_std = spread.std()
     zscore = (spread - spread_mean) / spread_std
 
-    # Perform cointegration test and calculate correlation
+    # Perform cointegration test
     score, p_value, _ = coint(df[stock1], df[stock2])
     correlation = df.corr().loc[stock1, stock2]
 
@@ -102,48 +104,27 @@ def analyze_and_plot_pairs(df, stock1, stock2):
         'Cointegration p-value': p_value,
         'Spread Mean': spread_mean,
         'Spread Std': spread_std,
-        'Latest Z-Score': zscore.iloc[-1] if len(zscore) > 0 else np.nan
+        'Latest Z-Score': zscore.iloc[-1]
     })
 
-    # Plotting price series
-    plt.figure(figsize=(12, 6))
-    plt.plot(df.index, df[stock1], label=f'{stock1} Price')
-    plt.plot(df.index, df[stock2], label=f'{stock2} Price')
-    plt.title(f'Price Series for {stock1} and {stock2}')
-    plt.xlabel('Date')
-    plt.ylabel('Price')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    price_series_plot = plt.gcf()
+    # Plot price series using Plotly Express
+    fig_price = px.line(df, x=df.index, y=[stock1, stock2], title=f'Price Series: {stock1} and {stock2}')
+    fig_price.update_layout(xaxis_title='Date', yaxis_title='Price')
+    plot_priceseries = fig_price.to_html(full_html=False)
 
-    # Plotting spread
-    plt.figure(figsize=(12, 6))
-    plt.plot(df.index, spread, label='Spread')
-    plt.axhline(y=spread_mean, color='r', linestyle='--', label='Spread Mean')
-    plt.title(f'Spread between {stock1} and {stock2}')
-    plt.xlabel('Date')
-    plt.ylabel('Spread Value')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    spread_plot = plt.gcf()
+    # Plot spread using Plotly Express
+    fig_spread = px.line(df, x=df.index, y=spread, title=f'Spread between {stock1} and {stock2}')
+    fig_spread.update_layout(xaxis_title='Date', yaxis_title='Spread')
+    plot_spread = fig_spread.to_html(full_html=False)
 
-    # Plotting Z-score
-    plt.figure(figsize=(12, 6))
-    plt.plot(df.index, zscore, label='Z-score')
-    plt.axhline(y=0, color='r', linestyle='--')
-    plt.axhline(y=1.0, color='b', linestyle='--')
-    plt.axhline(y=-1.0, color='b', linestyle='--')
-    plt.title(f'Z-score of {stock1} and {stock2}')
-    plt.xlabel('Date')
-    plt.ylabel('Z-score Value')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    zscore_plot = plt.gcf()
+    # Plot z-score using Plotly Express
+    fig_zscore = px.line(df, x=df.index, y=zscore, title=f'Z-score of {stock1} and {stock2}')
+    fig_zscore.add_hline(y=zscore.mean(), line_dash="dot", annotation_text="Mean", annotation_position="bottom right")
+    fig_zscore.add_hline(y=1.0, line_dash="dash", line_color="red", annotation_text="Z-score 1.0", annotation_position="bottom right")
+    fig_zscore.add_hline(y=-1.0, line_dash="dash", line_color="green", annotation_text="Z-score -1.0", annotation_position="bottom right")
+    fig_zscore.add_hline(y=2.0, line_dash="dash", line_color="red", annotation_text="Z-score 2.0", annotation_position="bottom right")
+    fig_zscore.add_hline(y=-2.0, line_dash="dash", line_color="green", annotation_text="Z-score -2.0", annotation_position="bottom right")
+    fig_zscore.update_layout(xaxis_title='Date', yaxis_title='Z-score')
+    plot_z_score = fig_zscore.to_html(full_html=False)
 
-    # Display plots
-    plt.show()
-
-    return pd.DataFrame(results), price_series_plot, spread_plot, zscore_plot
+    return results, plot_priceseries, plot_spread, plot_z_score
