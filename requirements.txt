@@ -8,4 +8,4 @@ kneed
 plotly
 statsmodels
 scikit-learn
-gunicorn
+flask
