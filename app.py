@@ -3,8 +3,9 @@ import numpy as np
 
 from download_data import data_selection
 from linear_regression import slr_cumulative_days_pctchange
+from rf_regression import rf_predict_days_predict
 from k_means_clustering import fetch_seasonal_data, compute_optimal_k, compute_markettrend_optimal_k, compute_seasonal_optimal_k, data_prep_returns, data_prep_seasonal, seasonal_trend_elbow, returns_volatility_elbow, plot_returns, plot_markettrend, plot_seasonaltrend
-from association_pairing import calculate_spread, analyze_pairs, analyze_and_plot_pairs
+from association_pairing import analyze_pairs, analyze_and_plot_pairs
 
 app = Flask(__name__)
 
@@ -21,13 +22,17 @@ def predict():
 # predict route
 @app.route('/predict', methods=['POST'])
 def prediction():
-    ticker_select = request.form['tickers']
+    index = request.form['index']
     start_date = request.form['start_date']
     num_lags = int(request.form['num_lags'])
     days_predict = int(request.form['days_predict'])
 
-    tickers, df = data_selection(ticker_select, start_date)
+    tickers, df = data_selection(index, start_date)
     predictions, metrics = slr_cumulative_days_pctchange(df, tickers, num_lags, days_predict)
+
+    rf_predict_days_predict(df, tickers, num_lags, days_predict)
+
+
 
     result = {
         'predictions': predictions,
@@ -36,7 +41,7 @@ def prediction():
 
     chart_div = result
 
-    return render_template('index.html', chart_div=chart_div)
+    return render_template('predict.html', chart_div=chart_div)
 
 # plot
 @app.route('/plot')
@@ -47,10 +52,10 @@ def plot():
 @app.route('/plot', methods=['POST'])
 def create_plot():
     plot_type = request.form['plot']
-    ticker_select = request.form['tickers']
+    index = request.form['index']
     start_date = request.form['start_date']
 
-    tickers, df = data_selection(ticker_select, start_date)
+    tickers, df = data_selection(index, start_date)
     returns = data_prep_returns(tickers, df)
     optimal_k = returns_volatility_elbow(returns)
 
@@ -70,32 +75,35 @@ def create_plot():
             cluster_labels_seasonal = compute_seasonal_optimal_k(X_seasonal, optimal_k_seasonal)
             plot_div = plot_seasonaltrend(X_seasonal, cluster_labels_seasonal, tickers)
 
-    return render_template('plot.html', plot_div=plot_div, plot_type=plot_type, ticker_select=ticker_select, start_date=start_date)
+    return render_template('plot.html', plot_div=plot_div, plot_type=plot_type, index=index, start_date=start_date)
 
 # association pairing
 @app.route('/associationpairing')
 def association_pairing():
     return render_template('associationpairing.html')
 
+@app.route('/getstocks', methods=['POST'])
+def get_stocks():
+    index = request.form['index']
+    start_date = request.form['start_date']
+
+    tickers = data_selection(index, start_date)[0]
+
+    return render_template('associationpairing.html', index=index, tickers=tickers, start_date=start_date)
+
 @app.route('/associationpairing', methods=['POST'])
 def analyse_pairs():
-    ticker_select = request.form['tickers']
+    index = request.form['index']
     start_date = request.form['start_date']
     stock1 = request.form['stock1']
     stock2 = request.form['stock2']
-    plotpairs = 'plotpairs' in request.form
-    tickers, df = data_selection(ticker_select, start_date)
 
-    calculate_spread(df, stock1, stock2)
-    results = analyze_pairs(df, tickers)
+    tickers, df = data_selection(index, start_date)
 
-    if plotpairs:
-        chart_div = analyze_and_plot_pairs(df, tickers)
-    else:
-        chart_div = "<div>Main analysis done, no plot generated.</div>"
+    results = analyze_and_plot_pairs(df, stock1, stock2)
 
-    return render_template('associationpairing.html', chart_div=chart_div)
+    return render_template('associationpairing.html', tickers=tickers, start_date=start_date, results=results)
 
 # main
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True) ## debug=True

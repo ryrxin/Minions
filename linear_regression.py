@@ -78,19 +78,3 @@ def slr_cumulative_days_pctchange(df, tickers, num_lags, days_predict):
         }
 
     return predictions, metrics
-
-
-
-# # creating a name to call the function as a script?
-# if __name__ == "__main__":            ## IDK HOW TO NAME THIS OR TURN IT INTO A CALLABLE SCRIPT OR HOW THAT WORKS ATM.
-#   tickers, df = fetch_ftse_data(start_date)
-#   predictions, metrics = slr_cumulative_days_pctchange(df, tickers, num_lags, days_predict)
-
-#   for ticker, preds in predictions.items():
-#       cumulative_change = np.prod(preds)
-#       print(f"Cumulative % change for {ticker}: {cumulative_change}")
-
-#   for ticker, metric in metrics.items():
-#     print(f"Metrics for {ticker}:")
-#     for metric_name, value in metric.items():
-#       print(f"{metric_name}: {value}")

@@ -12,7 +12,7 @@
     <body class="d-flex flex-column min-vh-100">
         <!-- Header -->
         <nav class="navbar navbar-dark bg-dark sticky-top navbar-expand-lg px-2">
-            <a class="navbar-brand" href="./"><img src="{{ url_for('static', filename='icon.ico')}}" width="32" height="32" class="d-inline-block align-top" alt="" />Minions</a>
+            <a class="navbar-brand" href="./"><img src="{{url_for('static', filename='icon.ico')}}" width="32" height="32" class="d-inline-block align-top" alt="" />Minions</a>
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item active">
                     <a class="nav-link" href="./predict">Predict</a>
@@ -45,9 +45,9 @@
 
                         <!-- Tickers -->
                         <div class="form-group">
-                            <label for="tickers" class="col-sm-1 col-form-label">Tickers:</label>
-                            <select id="tickers" name="tickers" required class="">
-                                <option>Select a ticker</option>
+                            <label for="index" class="col-sm-1 col-form-label">Index:</label>
+                            <select id="index" name="index" required class="">
+                                <option>Select an index</option>
                                 <option value="SPY">SPY</option>
                                 <option value="NDX">NDX</option>
                                 <option value="DAX">DAX</option>
