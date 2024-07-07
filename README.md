@@ -19,6 +19,7 @@ This attempts to build an AutoML tool for track 7 of the Tik Tok Tech Jam 2024: 
 - In your terminal, run ```git clone https://github.com/ryrxin/Minions```
 
 3. **Download the required packages**
+- Change your directory to the folder (e.g. ```cd Minions```)
 - In your terminal, run ```pip install -r requirements.txt```
 
 4. **Run the program**
