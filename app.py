@@ -1,5 +1,7 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, render_template, send_file
 import numpy as np
+import io
+import pandas as pd
 
 from download_data import data_selection
 from linear_regression import slr_cumulative_days_pctchange
@@ -33,30 +35,56 @@ def prediction():
     rf_predictions, rf_metrics = rf_predict_days_predict(df, tickers, num_lags, days_predict)
     xgb_predictions, xgb_metrics = xgb_predict_days_predict(df, tickers, num_lags, days_predict)
 
-    slr_result = {
-        'predictions': slr_predictions,
-        'metrics': slr_metrics
-    }
+       # Prepare the data for the CSV
+    data_combined = []
+    
+    for stock in tickers:
+        data_combined.append({
+            'Stock': stock,
+            'Model': 'MLR',
+            'Prediction': slr_predictions.get(stock, [None])[0],
+            'MSE': slr_metrics.get(stock, {}).get('MSE', None),
+            'RMSE': slr_metrics.get(stock, {}).get('RMSE', None),
+            'MAE': slr_metrics.get(stock, {}).get('MAE', None),
+            'MAPE': slr_metrics.get(stock, {}).get('MAPE', None)
+        })
+        data_combined.append({
+            'Stock': stock,
+            'Model': 'RF',
+            'Prediction': rf_predictions.get(stock, [None])[0],
+            'MSE': rf_metrics.get(stock, {}).get('MSE', None),
+            'RMSE': rf_metrics.get(stock, {}).get('RMSE', None),
+            'MAE': rf_metrics.get(stock, {}).get('MAE', None),
+            'MAPE': rf_metrics.get(stock, {}).get('MAPE', None)
+        })
+        data_combined.append({
+            'Stock': stock,
+            'Model': 'XGB',
+            'Prediction': xgb_predictions.get(stock, [None])[0],
+            'MSE': xgb_metrics.get(stock, {}).get('MSE', None),
+            'RMSE': xgb_metrics.get(stock, {}).get('RMSE', None),
+            'MAE': xgb_metrics.get(stock, {}).get('MAE', None),
+            'MAPE': xgb_metrics.get(stock, {}).get('MAPE', None)
+        })
 
-    rf_result = {
-        'predictions': rf_predictions,
-        'metrics': rf_metrics
-    }
+    df_output = pd.DataFrame(data_combined)
 
-    xgb_result = {
-        'predictions': xgb_predictions,
-        'metrics': xgb_metrics
-    }
+    # Create a CSV file in memory
+    output = io.StringIO()
+    df_output.to_csv(output, index=False)
+    output.seek(0)
 
-    return render_template('predict.html', slr_result=slr_result, rf_result=rf_result, xgb_result=xgb_result)
+    return send_file(io.BytesIO(output.getvalue().encode()), mimetype='text/csv', as_attachment=True, download_name='predictions.csv')
+
+    # return render_template('predict.html', slr_result=slr_result, rf_result=rf_result, xgb_result=xgb_result)
 
 # plot
-@app.route('/plot')
-def plot():
-    return render_template('plot.html')
+@app.route('/clustering')
+def clustering():
+    return render_template('clustering.html')
 
 # plot route
-@app.route('/plot', methods=['POST'])
+@app.route('/clustering', methods=['POST'])
 def create_plot():
     plot_type = request.form['plot']
     index = request.form['index']
@@ -82,7 +110,7 @@ def create_plot():
             cluster_labels_seasonal = compute_seasonal_optimal_k(X_seasonal, optimal_k_seasonal)
             plot_div = plot_seasonaltrend(X_seasonal, cluster_labels_seasonal, tickers)
 
-    return render_template('plot.html', plot_div=plot_div, plot_type=plot_type, index=index, start_date=start_date)
+    return render_template('clustering.html', plot_div=plot_div, plot_type=plot_type, index=index, start_date=start_date)
 
 # association pairing
 @app.route('/associationpairing')
