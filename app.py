@@ -141,4 +141,4 @@ def analyse_pairs():
 
 # main
 if __name__ == '__main__':
-    app.run(port='10000')
+    app.run()
