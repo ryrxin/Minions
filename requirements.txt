@@ -9,3 +9,4 @@ plotly
 statsmodels
 scikit-learn
 flask
+xgboost
